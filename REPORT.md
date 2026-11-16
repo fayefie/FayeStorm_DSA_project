@@ -4,6 +4,13 @@ Keep this concise and specific to your implementation.
 
 ## 1. Initial analysis
 
+Baseline results on home PC:
+  Locations: 2500
+  Connections: 9800
+  Iterations: 5000
+  Elapsed: 530 ms
+  Checksum: 6267100
+
 - How are locations and connections represented in the baseline?
 - Which operations appear frequent?
 - Which operation(s) do you predict may scale poorly?
