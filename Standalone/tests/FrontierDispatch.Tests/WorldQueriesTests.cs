@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using FrontierDispatch.Core;
 
@@ -30,6 +31,19 @@ namespace FrontierDispatch.Tests
             for (int i = 0; i < outgoing.Count; ++i)
             {
                 Assert.That(outgoing[i].FromLocationId, Is.EqualTo(734));
+            }
+        }
+
+        [Test]
+        public void LocationsById_ContainsEverySampleLocation()
+        {
+            var world = SampleWorldFactory.CreateSmall();
+
+            Assert.That(world.LocationsById.Count, Is.EqualTo(world.Locations.Count));
+            foreach (Location location in world.Locations)
+            {
+                Assert.That(world.LocationsById.TryGetValue(location.Id, out Location? indexed), Is.True);
+                Assert.That(indexed, Is.SameAs(location));
             }
         }
     }
