@@ -40,6 +40,9 @@ Baseline results on home PC:
 
 Describe important changes/retained choices, operations affected, and time/memory trade-offs.
 
+- WorldData now builds a dictionary once in its constructor, keyed by Location.Id. the _locations array and Location list are unchanged. The dictionary is exposed as IReadOnlyDictionary<int, Location>, WorldQueries.FindLocationById reads the index with TryGetValue. Instead of scanning the list, so lookups no longer re-scan locations
+  - FindLocationById drops from O(L) per call to O(1) average, and the index is build once per world.
+
 ## 3. Algorithms and adaptation
 
 Explain your route finder at a useful high level and how the travel-budget query adapts the same ideas.
@@ -48,7 +51,7 @@ Explain your route finder at a useful high level and how the travel-budget query
 
 | Operation | Your representation/algorithm | Complexity | Short explanation |
 | --- | --- | --- | --- |
-| Find location by ID | | | |
+| Find location by ID | Dictionary<int, Location> built once in WorldData | O(1) average per lookup, O(L) build, and O(L) space | One hash lookup on the ID. The linear scan is paid once per world instead of once per query |
 | Get outgoing connections | | | |
 | Priority queue enqueue | | | |
 | Priority queue dequeue-min | | | |
@@ -61,6 +64,15 @@ Important tests/edge cases and what they demonstrate.
 ## 6. Performance investigation
 
 Record reproducible before/after measurements for loading/preparation, repeated runtime work, and relevant allocation behavior. Explain what changed and why.
+
+### 1. Before/After adding dictionary
+
+| Version | Elapsed (ms)| Checksum |
+| --- | --- | --- |
+| Before (scan) | 530 | 6267100 |
+| After (dictionary) | 463 | 6267100 |
+
+Running the baseline before/after the dictionary implementation produced a ~13.4% improvement in run speed, showing that the implementation is a new improvement
 
 ## 7. Development reflection
 
