@@ -61,6 +61,9 @@ Explain your route finder at a useful high level and how the travel-budget query
 
 Important tests/edge cases and what they demonstrate.
 
+1. LocationsById_ContainsEverySampleLocation()
+   - Tests the WorldData index that our lookups read from. If there's a broken index (count, dropped ID, etc), it'll fail here first
+
 ## 6. Performance investigation
 
 Record reproducible before/after measurements for loading/preparation, repeated runtime work, and relevant allocation behavior. Explain what changed and why.
