@@ -24,19 +24,7 @@ namespace FrontierDispatch.Core
             _world = world ?? throw new ArgumentNullException(nameof(world));
         }
 
-        public Location? FindLocationById(int id)
-        {
-            for (int i = 0; i < _world.Locations.Count; ++i)
-            {
-                Location location = _world.Locations[i];
-                if (location.Id == id)
-                {
-                    return location;
-                }
-            }
-
-            return null;
-        }
+        public Location? FindLocationById(int id) => _world.LocationsById.TryGetValue(id, out Location? location) ? location : null;
 
         public IReadOnlyList<Connection> FindOutgoingConnections(int fromLocationId)
         {
