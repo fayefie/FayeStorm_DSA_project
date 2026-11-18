@@ -46,5 +46,15 @@ namespace FrontierDispatch.Tests
                 Assert.That(indexed, Is.SameAs(location));
             }
         }
+
+        [Test]
+        public void LocationsById_ReturnsNullWhenWorldIsEmpty()
+        {
+            var world = new WorldData(Array.Empty<Location>(), Array.Empty<Connection>());
+
+            var queries = new WorldQueries(world);
+
+            Assert.That(queries.FindLocationById(1), Is.Null);
+        }
     }
 }

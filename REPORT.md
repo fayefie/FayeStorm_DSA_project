@@ -66,6 +66,9 @@ Important tests/edge cases and what they demonstrate.
 
 1. LocationsById_ContainsEverySampleLocation()
    - Tests the WorldData index that our lookups read from. If there's a broken index (count, dropped ID, etc), it'll fail here first
+2. FindLocationById_ReturnsNullWhenWorldIsEmpty()
+   - Makes sure that the lookup doesn't throw/return and invalid value if the dictionary has no locations
+
 
 ## 6. Performance investigation
 
