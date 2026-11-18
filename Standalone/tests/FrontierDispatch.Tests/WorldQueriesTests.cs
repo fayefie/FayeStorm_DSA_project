@@ -56,5 +56,19 @@ namespace FrontierDispatch.Tests
 
             Assert.That(queries.FindLocationById(1), Is.Null);
         }
+
+        [Test]
+        public void LocationsById_HandlesDuplicateLocationEntries()
+        {
+            var originWorld = SampleWorldFactory.CreateSmall();
+            Location location = originWorld.Locations[0];
+
+            var world = new WorldData(new[] { location, location }, Array.Empty<Connection>());
+
+            var queries = new WorldQueries(world);
+
+            Assert.That(queries.FindLocationById(location.Id), Is.SameAs(location));
+            Assert.That(world.LocationsById.Count, Is.EqualTo(1));
+        }
     }
 }
