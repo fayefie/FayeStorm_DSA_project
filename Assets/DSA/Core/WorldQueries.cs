@@ -18,6 +18,7 @@ namespace FrontierDispatch.Core
     public sealed class WorldQueries
     {
         private readonly WorldData _world;
+        private static readonly Connection[] NoConnections = Array.Empty<Connection>();
 
         public WorldQueries(WorldData world)
         {
@@ -26,19 +27,6 @@ namespace FrontierDispatch.Core
 
         public Location? FindLocationById(int id) => _world.LocationsById.TryGetValue(id, out Location? location) ? location : null;
 
-        public IReadOnlyList<Connection> FindOutgoingConnections(int fromLocationId)
-        {
-            var result = new List<Connection>();
-            for (int i = 0; i < _world.Connections.Count; ++i)
-            {
-                Connection connection = _world.Connections[i];
-                if (connection.FromLocationId == fromLocationId)
-                {
-                    result.Add(connection);
-                }
-            }
-
-            return result;
-        }
+        public IReadOnlyList<Connection> FindOutgoingConnections(int fromLocationId) => _world.OutGoingConnections.TryGetValue(fromLocationId, out Connection[]? edges) ? edges : NoConnections;
     }
 }

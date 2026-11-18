@@ -43,6 +43,9 @@ Describe important changes/retained choices, operations affected, and time/memor
 - WorldData now builds a dictionary once in its constructor, keyed by Location.Id. the _locations array and Location list are unchanged. The dictionary is exposed as IReadOnlyDictionary<int, Location>, WorldQueries.FindLocationById reads the index with TryGetValue. Instead of scanning the list, so lookups no longer re-scan locations
   - FindLocationById drops from O(L) per call to O(1) average, and the index is build once per world.
 
+- Outgoing connections are now also indexed once in WorldData as Dictionary<int, Connection[]>.
+    - FindOutGoingConnections is now an O(1) hash lookup that returns a shared immutable list.
+
 ## 3. Algorithms and adaptation
 
 Explain your route finder at a useful high level and how the travel-budget query adapts the same ideas.
@@ -52,7 +55,7 @@ Explain your route finder at a useful high level and how the travel-budget query
 | Operation | Your representation/algorithm | Complexity | Short explanation |
 | --- | --- | --- | --- |
 | Find location by ID | Dictionary<int, Location> built once in WorldData | O(1) average per lookup, O(L) build, and O(L) space | One hash lookup on the ID. The linear scan is paid once per world instead of once per query |
-| Get outgoing connections | | | |
+| Get outgoing connections | Dictionary<int, Connection[]> | O(1) average per call, O(V+E) build/space | One lookup returns the stored array, and the baseline scans all E edges and allocates a new list each call |
 | Priority queue enqueue | | | |
 | Priority queue dequeue-min | | | |
 | Route finding | | | |
@@ -68,14 +71,16 @@ Important tests/edge cases and what they demonstrate.
 
 Record reproducible before/after measurements for loading/preparation, repeated runtime work, and relevant allocation behavior. Explain what changed and why.
 
-### 1. Before/After adding dictionary
+### Before/After each iteration
 
 | Version | Elapsed (ms)| Checksum |
 | --- | --- | --- |
-| Before (scan) | 530 | 6267100 |
-| After (dictionary) | 463 | 6267100 |
+| Before (Baseline) | 530 | 6267100 |
+| After (FindLocationById dictionary) | 463 | 6267100 |
+| After (GetOutGoingConnections dictionary) | 0 | 6267100 |
 
-Running the baseline before/after the dictionary implementation produced a ~13.4% improvement in run speed, showing that the implementation is a new improvement
+- Running the baseline before/after the dictionary implementation for FindLocationById produced a ~13.4% improvement in run speed, showing that the implementation is a new improvement
+- After implementing the dictionary for FindOutGoingConnections, the elapsed time when running --baseline is now down to 0ms. Since the workload is mostly dominated by FindOutgoingConnections, and we have 9800-scans per call that have now become hash hits, it makes sense that we've had such a huge improvement now.
 
 ## 7. Development reflection
 
