@@ -70,6 +70,8 @@ Important tests/edge cases and what they demonstrate.
    - Makes sure that the lookup doesn't throw/return and invalid value if the dictionary has no locations
 3. FindLocationById_HandlesDuplicateLocationEntries()
    - Handles having locations ID locations. Since we're using TryAdd then the first location with the sought ID wins
+4. FindOutgoingConnections_ReturnsEmptyWhenWorldHasNoConnections()
+   - Returns and empty collection when there are no connections in the world
 
 
 ## 6. Performance investigation

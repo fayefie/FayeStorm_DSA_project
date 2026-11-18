@@ -70,5 +70,15 @@ namespace FrontierDispatch.Tests
             Assert.That(queries.FindLocationById(location.Id), Is.SameAs(location));
             Assert.That(world.LocationsById.Count, Is.EqualTo(1));
         }
+
+        [Test]
+        public void FindOutgoingConnections_ReturnsEmptyWhenWorldHasNoConnections()
+        {
+            var world = new WorldData(SampleWorldFactory.CreateSmall().Locations, Array.Empty<Connection>());
+
+            var queries = new WorldQueries(world);
+
+            Assert.That(queries.FindOutgoingConnections(734), Is.Empty);
+        }
     }
 }
