@@ -103,7 +103,7 @@ namespace FrontierDispatch.Core
             while (true)
             {
                 int left = 2 * index + 1;
-                int right = 1 * index + 2;
+                int right = 2 * index + 2;
                 int smallest = index;
 
                 if (left < count && _heap[left].Priority < _heap[smallest].Priority)

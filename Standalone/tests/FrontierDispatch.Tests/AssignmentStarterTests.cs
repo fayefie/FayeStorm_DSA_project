@@ -1,6 +1,7 @@
 using System;
 using NUnit.Framework;
 using FrontierDispatch.Core;
+using System.Linq;
 
 namespace FrontierDispatch.Tests
 {
@@ -24,6 +25,35 @@ namespace FrontierDispatch.Tests
             queue.Enqueue("cheap", 2);
             queue.Enqueue("medium", 5);
             Assert.That(queue.Dequeue(), Is.EqualTo("cheap"));
+        }
+
+        [Test]
+        public void Stress_EnqueueThenDrain_ReturnsItemsInNonDecreasingPriorityOrder()
+        {
+            var rng = new Random(20240607);
+            const int n = 1000;
+
+            var priorityOf = Enumerable.Range(0, n).ToArray();
+            for (int i = n - 1; i > 0; i--)
+            {
+                int j = rng.Next(i + 1);
+                (priorityOf[i], priorityOf[j]) = (priorityOf[j], priorityOf[i]);
+            }
+
+            var q = new MinPriorityQueue<int>();
+            for (int i = 0; i < n; i++)
+            {
+                q.Enqueue(i, priorityOf[i]);
+            }
+
+            int[] expectedOrder = Enumerable.Range(0, n).OrderBy(i => priorityOf[i]).ToArray();
+
+            for (int k = 0; k < n; k++)
+            {
+                Assert.That(q.Dequeue(), Is.EqualTo(expectedOrder[k]),
+                    $"Dequeue #{k} did not return the next-lowest-priority item.");
+            }
+            Assert.That(q.Count, Is.EqualTo(0));
         }
 
         [Test, Ignore("Phase 4: enable when implementing Dijkstra route finding.")]

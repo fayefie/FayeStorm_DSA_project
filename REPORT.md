@@ -72,6 +72,8 @@ Important tests/edge cases and what they demonstrate.
    - Handles having locations ID locations. Since we're using TryAdd then the first location with the sought ID wins
 4. FindOutgoingConnections_ReturnsEmptyWhenWorldHasNoConnections()
    - Returns and empty collection when there are no connections in the world
+5. Stress_EnqueueThenDrain_ReturnsItemsInNonDecreasingPriorityOrder()
+   - Test checks wheather MinPriorityQueue<int> can correctly maintain min-priority order when it's handling a large number of items
 
 
 ## 6. Performance investigation
@@ -92,6 +94,11 @@ Record reproducible before/after measurements for loading/preparation, repeated 
 ## 7. Development reflection
 
 Describe one bug, wrong assumption, failed approach, or surprising result and how you investigated it.
+
+There was an incorrect implementation in my MinPriorityQueue, specifically in the SiftDown(int index) method. The method had the line `int right = 1 * index + 2;` which was calculating the wrong right child element for pretty much everry node.
+The bug went unnoticed when I initially wrote the code, since the supplied starter test passed without issue, but it was caught only after a second test was added to test if the prio queue can correctly maintain min-priority order when it's handling a large number of items´.
+The error message said "Dequeue #3 did not return the next-lowest-priority item." and where it expected 453 it returned 819, which showed a sifting error. Checking the lab 04b, I found that the correct calculation should actually be `int right = 2 * index + 2;` to calculate the right child correctly.
+After changing that line of code, re-running the test again showed all greens.
 
 ## 8. Tools and AI assistance
 
