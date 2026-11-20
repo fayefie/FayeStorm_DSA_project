@@ -2,6 +2,7 @@ using System;
 using NUnit.Framework;
 using FrontierDispatch.Core;
 using System.Linq;
+using NUnit.Framework.Internal;
 
 namespace FrontierDispatch.Tests
 {
@@ -54,6 +55,22 @@ namespace FrontierDispatch.Tests
                     $"Dequeue #{k} did not return the next-lowest-priority item.");
             }
             Assert.That(q.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void SiftDown_AfterDequeue_SwapWithSmallerRightChild_NotJustLeft()
+        {
+            var q = new MinPriorityQueue<string>();
+            q.Enqueue("zero", 0);
+            q.Enqueue("five", 5);
+            q.Enqueue("one", 1);
+            q.Enqueue("ten", 10);
+
+            Assert.That(q.Dequeue(), Is.EqualTo("zero"));
+            Assert.That(q.Peek(), Is.EqualTo("one"));
+            Assert.That(q.Dequeue(), Is.EqualTo("one"));
+            Assert.That(q.Dequeue(), Is.EqualTo("five"));
+            Assert.That(q.Dequeue(), Is.EqualTo("ten"));
         }
 
         [Test, Ignore("Phase 4: enable when implementing Dijkstra route finding.")]

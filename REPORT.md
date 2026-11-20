@@ -74,6 +74,9 @@ Important tests/edge cases and what they demonstrate.
    - Returns and empty collection when there are no connections in the world
 5. Stress_EnqueueThenDrain_ReturnsItemsInNonDecreasingPriorityOrder()
    - Test checks wheather MinPriorityQueue<int> can correctly maintain min-priority order when it's handling a large number of items
+6. SiftDown_AfterDequeue_SwapWithSmallerRightChild_NotJustLeft()
+   - Checking if `SiftDown()` correctly chooses the smaller of the left and right children when restoring the min-heap after a dequeue.
+   - This is to prevent a bug where the implementation always swaps with the left child, even if the right child has a smaller priority
 
 
 ## 6. Performance investigation
