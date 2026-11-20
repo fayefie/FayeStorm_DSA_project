@@ -56,8 +56,8 @@ Explain your route finder at a useful high level and how the travel-budget query
 | --- | --- | --- | --- |
 | Find location by ID | Dictionary<int, Location> built once in WorldData | O(1) average per lookup, O(L) build, and O(L) space | One hash lookup on the ID. The linear scan is paid once per world instead of once per query |
 | Get outgoing connections | Dictionary<int, Connection[]> | O(1) average per call, O(V+E) build/space | One lookup returns the stored array, and the baseline scans all E edges and allocates a new list each call |
-| Priority queue enqueue | | | |
-| Priority queue dequeue-min | | | |
+| Priority queue enqueue | Binary min-heap in `List<Entry>` (append + SiftUp) | O(log n) | New entry is appended to the end of the array, then bubbled up until its parent has a lower-or-equal priority |
+| Priority queue dequeue-min | Binary min-heap (swap root with last, remove last slow, SiftDown) | O(log n) | Root (minimum) is read out, the last leaf is moved to the root slot, the array shrinks by one, and then the new root is sifted down towards the samller child |
 | Route finding | | | |
 
 ## 5. Correctness and testing
