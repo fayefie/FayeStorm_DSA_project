@@ -130,6 +130,33 @@ Record reproducible before/after measurements for loading/preparation, repeated 
 - Running the baseline before/after the dictionary implementation for FindLocationById produced a ~13.4% improvement in run speed, showing that the implementation is a new improvement
 - After implementing the dictionary for FindOutGoingConnections, the elapsed time when running --baseline is now down to 0ms. Since the workload is mostly dominated by FindOutgoingConnections, and we have 9800-scans per call that have now become hash hits, it makes sense that we've had such a huge improvement now.
 
+### Phase 6. Measuring improvements in runtime from fresh baseline code against current code.
+- A test is ran for a small, medium, and large sized worlds at 5000 iterations. Each test is ran five times and the median and mean are shown here.
+- I also ran the test and additional five times each for small, medium, and large sized worlds at 500000 iterations instead. Only for the current version of the code because the untouched baseline couldn't handle that many iterations on my machine.
+    - This is only done to show actual changes between world sizes since the current code returns 0ms for small and medium, and 1ms for large
+- Since the checksum is the same for all tests, it's not recorded here
+
+### Untouched baseline at 5000 iterations
+| World size | Elapsed median | Elapsed mean |
+| --- | --- | --- |
+| Small world | 5ms | 5.2ms |
+| Medium world | 530ms | 546ms |
+| Large world | 8432ms | 8444ms |
+
+### Current optimised baseline at 5000 iterations
+| World size | Elapsed median | Elapsed mean |
+| --- | --- | --- |
+| Small world | 0ms | 0ms |
+| Medium world | 0ms | 0ms |
+| Large world | 1ms | 0.8ms |
+
+### Current optimised baseline at 500000 iterations
+| World size | Elapsed median | Elapsed mean |
+| --- | --- | --- |
+| Small world | 19ms | 18.6ms |
+| Medium world | 21ms | 20.6ms |
+| Large world | 36ms | 37.6ms |
+
 ## 7. Development reflection
 
 Describe one bug, wrong assumption, failed approach, or surprising result and how you investigated it.
