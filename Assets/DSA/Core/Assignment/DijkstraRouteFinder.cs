@@ -102,7 +102,7 @@ namespace FrontierDispatch.Core
                     }
 
                     dist[edge.ToLocationId] = candidate;
-                    dist[edge.ToLocationId] = current;
+                    prev[edge.ToLocationId] = current;
                     queue.Enqueue((edge.ToLocationId, candidate), candidate);
                 }
             }

@@ -50,6 +50,23 @@ Describe important changes/retained choices, operations affected, and time/memor
 
 Explain your route finder at a useful high level and how the travel-budget query adapts the same ideas.
 
+`DijkstraRouteFinder.FindRoute(start, goal)` that runs over the outgoing connections index from phase 2 and finds a lowest cost travel route between a start and goal point.
+
+### Bookkeeping
+- `dist` - Dictionary<int, int> mapping node id. Current best known distance
+- `prev` - Dictionary<int, int> mapping node id. Predecessor to the best known route
+- `settled` - HashSet<int> tracking nodes whose distance is already final
+- Frontier - `MinPriorityQueuez(int NodeId, int Cost)>, priority = cost
+
+### loop invariants and shortcuts
+- Each heap entry stores the node id and cost at the time of push. On dequeue, if the `costAtPush != dist[cureent]` then the entry has been superseded by a cheaper push and is discared (aka laze deletion)
+- That, combined with `settled`, each vertex is expanded at moost once
+- As soon as the goal is dequeued it is final (Dijkstra's invarint), so the rest of the reachable set is left unexpanded
+- Unknown endpoints (those not in `WorldData.LocationsById`) "short circuit" to a not-found result wotj amd empty route and `-1` cost before any heap work
+- `start == goal` returns `{start}` with cost 0 without a heap cycle
+
+Route reconstruction then walks `prev` from the goal back to the start, and reversed the list. The reported `TotalCost` is `Dist[goal]`. The same value the seach proved minimal
+
 ## 4. Complexity
 
 | Operation | Your representation/algorithm | Complexity | Short explanation |
@@ -58,7 +75,7 @@ Explain your route finder at a useful high level and how the travel-budget query
 | Get outgoing connections | Dictionary<int, Connection[]> | O(1) average per call, O(V+E) build/space | One lookup returns the stored array, and the baseline scans all E edges and allocates a new list each call |
 | Priority queue enqueue | Binary min-heap in `List<Entry>` (append + SiftUp) | O(log n) | New entry is appended to the end of the array, then bubbled up until its parent has a lower-or-equal priority |
 | Priority queue dequeue-min | Binary min-heap (swap root with last, remove last slow, SiftDown) | O(log n) | Root (minimum) is read out, the last leaf is moved to the root slot, the array shrinks by one, and then the new root is sifted down towards the samller child |
-| Route finding | | | |
+| Route finding | Dijkstra: `Dictionary<int, int>` for `dist/prev`, `MinPriorityQueue<(NodeId, Cost)>` frontier, `HashSet<int>` settled set | O((V + E) log V) time. O(V) space | Each vertex dequeues at most once (superceded entry check + settled set). Each outgoing edge is relaxed at most once. Each heap push/pop is O(log V). Early exit at the goal typically shrinks the expanded set well below V but does not change the worst case |
 
 ## 5. Correctness and testing
 
@@ -77,6 +94,8 @@ Important tests/edge cases and what they demonstrate.
 6. SiftDown_AfterDequeue_SwapWithSmallerRightChild_NotJustLeft()
    - Checking if `SiftDown()` correctly chooses the smaller of the left and right children when restoring the min-heap after a dequeue.
    - This is to prevent a bug where the implementation always swaps with the left child, even if the right child has a smaller priority
+7. Dijkstra_UnknownStartOrGoal_ReturnsNotFound()
+   - Test does a missing bounds check, or `ContainsKey` returning wrong value
 
 
 ## 6. Performance investigation

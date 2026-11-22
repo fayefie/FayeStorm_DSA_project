@@ -83,6 +83,18 @@ namespace FrontierDispatch.Tests
             Assert.That(result.LocationIds, Is.EqualTo(new[] { 0 }));
         }
 
+        [Test]
+        public void Dijkstra_UnknownStartOrGoal_ReturnsNotFound()
+        {
+            var finder = new DijkstraRouteFinder(WorldDatasetFactory.CreateSmall());
+
+            const int unknown = int.MaxValue;
+
+            Assert.That(finder.FindRoute(unknown, 0).Found, Is.False, "Unknown start should not produce a route");
+            Assert.That(finder.FindRoute(0, unknown).Found, Is.False, "Unknown goal should not produce a route");
+            Assert.That(finder.FindRoute(unknown, unknown).Found, Is.False, "Two unknown endpoints should not produce a route");
+        }
+
         [Test, Ignore("Phase 5: enable when implementing bounded reachability.")]
         public void Reachability_ZeroBudget_IncludesStartAtZeroCost()
         {
