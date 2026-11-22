@@ -95,13 +95,65 @@ namespace FrontierDispatch.Tests
             Assert.That(finder.FindRoute(unknown, unknown).Found, Is.False, "Two unknown endpoints should not produce a route");
         }
 
-        [Test, Ignore("Phase 5: enable when implementing bounded reachability.")]
+        [Test]
         public void Reachability_ZeroBudget_IncludesStartAtZeroCost()
         {
             var query = new ReachabilityQuery(WorldDatasetFactory.CreateSmall());
             var result = query.FindReachable(0, 0);
             Assert.That(result.ContainsKey(0), Is.True);
             Assert.That(result[0], Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Reachability_NegativeBudget_RetrunsEmpty()
+        {
+            var query = new ReachabilityQuery(WorldDatasetFactory.CreateSmall());
+            var result = query.FindReachable(0, -1);
+
+            Assert.That(result, Is.Empty, "No location (not even the start location) fits a negative budget");
+        }
+
+        [Test]
+        public void Reachability_UnknownStart_ReturnsEmpty()
+        {
+            var query = new ReachabilityQuery(WorldDatasetFactory.CreateSmall());
+            var result = query.FindReachable(int.MaxValue, 100);
+
+            Assert.That(result, Is.Empty, "An unknown start must not surface as a reachable node");
+        }
+
+        [Test]
+        public void Reachability_CostsSatisfyTriangleInequality()
+        {
+            var world = WorldDatasetFactory.CreateSmall();
+            var query = new ReachabilityQuery(world);
+            int start = world.LocationsById.Keys.Min();
+            int budget = int.MaxValue / 2;
+
+            var reachable = query.FindReachable(start, budget);
+
+            Assert.That(reachable.ContainsKey(start), Is.True);
+            Assert.That(reachable[start], Is.EqualTo(0));
+
+            foreach (var kv in reachable)
+            {
+                if (!world.OutGoingConnections.TryGetValue(kv.Key, out var edges))
+                {
+                    continue;
+                }
+
+                foreach (var e in edges)
+                {
+                    int viaA = kv.Value + e.TravelCost;
+                    if (viaA > budget)
+                    {
+                        continue;
+                    }
+
+                    Assert.That(reachable.ContainsKey(e.ToLocationId), Is.True, $"Edge {kv.Key} -> {e.ToLocationId} fits in the budget but the target wasn't reached");
+                    Assert.That(reachable[e.ToLocationId], Is.LessThanOrEqualTo(viaA), $"Non-minimal cost for {e.ToLocationId}: {reachable[e.ToLocationId]} " + $"but route via {kv.Key} gives {viaA}");
+                }
+            }
         }
     }
 }

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 
 namespace FrontierDispatch.Core
 {
@@ -38,8 +40,73 @@ namespace FrontierDispatch.Core
         /// </summary>
         public IReadOnlyDictionary<int, int> FindReachable(int startLocationId, int maxTravelCost)
         {
-            // TODO: adapt shortest-path reasoning to the travel-cost budget.
-            throw new NotImplementedException();
+            var result = new Dictionary<int, int>();
+
+            // negatvice budget cannot cover the start cost zero
+            if (maxTravelCost < 0)
+            {
+                return result;
+            }
+
+            // unknown start = nothing to explore
+            if (!_world.LocationsById.ContainsKey(startLocationId))
+            {
+                return result;
+            }
+
+            // using same bookkeeping containers as DijkstraRouteFinder
+            var dist = new Dictionary<int, int>(_world.LocationsById.Count);
+            var settled = new HashSet<int>();
+            var queue = new MinPriorityQueue<(int NodeId, int Cost)>();
+
+            dist[startLocationId] = 0;
+            queue.Enqueue((startLocationId, 0), 0);
+
+            while (queue.Count > 0)
+            {
+                (int current, int costAtPush) = queue.Dequeue();
+
+                // superseded entry (a cheaper push arrived first)
+                if (costAtPush != dist[current])
+                {
+                    continue;
+                }
+
+                // already finalised
+                if (!settled.Add(current))
+                {
+                    continue;
+                }
+
+                result[current] = costAtPush;
+
+                if (!_world.OutGoingConnections.TryGetValue(current, out var edges))
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < edges.Length; ++i)
+                {
+                    Connection edge = edges[i];
+                    int candidate = costAtPush + edge.TravelCost;
+
+                    // budget pruning at relaxation time so out of budget nodes don't occupy heap slots
+                    if (candidate > maxTravelCost)
+                    {
+                        continue;
+                    }
+
+                    if (dist.TryGetValue(edge.ToLocationId, out int existing) && candidate >= existing)
+                    {
+                        continue;
+                    }
+
+                    dist[edge.ToLocationId] = candidate;
+                    queue.Enqueue((edge.ToLocationId, candidate), candidate);
+                }
+            }
+
+            return result;
         }
     }
 }

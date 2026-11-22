@@ -65,7 +65,18 @@ Explain your route finder at a useful high level and how the travel-budget query
 - Unknown endpoints (those not in `WorldData.LocationsById`) "short circuit" to a not-found result wotj amd empty route and `-1` cost before any heap work
 - `start == goal` returns `{start}` with cost 0 without a heap cycle
 
-Route reconstruction then walks `prev` from the goal back to the start, and reversed the list. The reported `TotalCost` is `Dist[goal]`. The same value the seach proved minimal
+Route reconstruction then walks `prev` from the goal back to the start, then reverses the list. The reported `TotalCost` is `Dist[goal]`. The same value the search proved minimal
+
+### Phase 5 - Dijkstra into ReachabilityQuery
+`ReachabilityQuery` reuses the same containers (`dist`, `settled`, and `MinPriorityQueue<(NodeId, Cost)>`) and the same superseded-entry check as the route finder. With added changes that solve the different problems:
+    - There is no single goal, so the loop rruns until the frontier empties. Each node is written into the result dictionary the moment it is deqqueued, which means the returned dictionary is exactly `dist` restricted to within-budget nodes
+    - A candidate edge is only accepted when `candidate <= budget`. The budged is enfored at realaxation time before the entry is pushed, and out-of-bounds nodes never occupy a heap slot
+    - `prev` is not needed since the answer is the cost map itself, returned as `IReadOnlyDictionary<int,int>`
+
+Two edge cases are handled without touching the main loop:
+    - `maxTravelCost < 0` returns an empty dictionary before any work — the start
+      itself has cost 0 and cannot fit a negative budget.
+    - An unknown `startLocationId` returns an empty dictionary (no heap work)
 
 ## 4. Complexity
 
@@ -96,6 +107,12 @@ Important tests/edge cases and what they demonstrate.
    - This is to prevent a bug where the implementation always swaps with the left child, even if the right child has a smaller priority
 7. Dijkstra_UnknownStartOrGoal_ReturnsNotFound()
    - Test does a missing bounds check, or `ContainsKey` returning wrong value
+8. Reachability_NegativeBudget_ReturnsEmpty()
+   - Tests that a negative budget shouldn't allow any location to be reached, this includes the starting location itself.
+9. Reachability_UnknownStart_ReturnsEmpty()
+   - Tests that if the starting location doesn't exist in the dataset then the algorith shouldn return no reachable locations.
+10. Reachability_CostsSatisfyTriangleInequality()
+   - Tests reachability completeness and the correctness of recorded travel costs, using the triangle inequality.
 
 
 ## 6. Performance investigation
