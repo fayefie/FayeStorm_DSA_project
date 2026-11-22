@@ -131,31 +131,26 @@ Record reproducible before/after measurements for loading/preparation, repeated 
 - After implementing the dictionary for FindOutGoingConnections, the elapsed time when running --baseline is now down to 0ms. Since the workload is mostly dominated by FindOutgoingConnections, and we have 9800-scans per call that have now become hash hits, it makes sense that we've had such a huge improvement now.
 
 ### Phase 6. Measuring improvements in runtime from fresh baseline code against current code.
-- A test is ran for a small, medium, and large sized worlds at 5000 iterations. Each test is ran five times and the median and mean are shown here.
-- I also ran the test an additional five times each for small, medium, and large sized worlds at 500000 iterations instead. Only for the current version of the code because the untouched baseline couldn't handle that many iterations on my machine.
-    - This is only done to show actual changes between world sizes since the current code returns 0ms for small and medium, and 1ms for large
-- Since the checksum is the same for all tests, it's not recorded here
+- Added extra code to Program.cs to help measure world preparations and memory allocation.
+- The updated code is run in the current more optimised version of the code, and also added to a fresh baseline version and ran there as well
+- Preparation is measured by running a stopwatch around the world creation code.
+- Elapsed time was already measured by the baseline
+- Allocation are measured by reading `GC.GetAllocatedBytesForCurrentThread()` directly before and after the query loop (`allocBefore` and `allocAfter` respectively), and then subtracting the results from each other (`long allocDelta = allocAfter - allocBefore;`)
+- I also ran the test an additional time on the optemised version, using 500000 iterations instead of 5000 so we can see some actual numbers instead of ms
+- Furthermore I ran both the optemised version and the untouched baseline again, this time using `Elapsed.TotalMilliseconds`. I know that it's technically redundant since increasing the iteration count already achieves the same point by showing us actual numbers in the new version, but I felt the clarity was useful
 
-### Untouched baseline at 5000 iterations
-| World size | Elapsed median | Elapsed mean |
-| --- | --- | --- |
-| Small world | 5ms | 5.2ms |
-| Medium world | 530ms | 546ms |
-| Large world | 8432ms | 8444ms |
+The results are as follows:
 
-### Current optimised baseline at 5000 iterations
-| World size | Elapsed median | Elapsed mean |
-| --- | --- | --- |
-| Small world | 0ms | 0ms |
-| Medium world | 0ms | 0ms |
-| Large world | 1ms | 0.8ms |
+| Version | Preparation (ms) | Elapsed (ms)| Elapsed (ms) (Elapsed.TotalMilliseconds) Allocations (b) |
+| Untouched baseline (5000 iterations) | 1ms | 536ms | 522,6724 ms | 240028 bytes (48,0 B/iteration) |
+| Optimised version (5000 iterations) | 2ms | 0ms | 0,4834 ms | 28 bytes (0,0 B/iteration) |
+| Optimised version (500000 iterations) | 2ms | 19 ms | 20,5087 ms | 28 bytes (0,0 B/iteration) |
 
-### Current optimised baseline at 500000 iterations
-| World size | Elapsed median | Elapsed mean |
-| --- | --- | --- |
-| Small world | 19ms | 18.6ms |
-| Medium world | 21ms | 20.6ms |
-| Large world | 36ms | 37.6ms |
+- The results of the test show a very small change in preparation time between the untouched baseline and the optimised version (1ms vs 2ms). My reasoning and understanding is that this is because the current version of the code just does more things than the untouched baseline. We've implemented a min-priority queue, dijkstra's route finder, and a reachability queue to name a few. So it would make sense that there is a small increase.
+    - What is also important to note though is that this change is by only 1ms, which I think is a very worthy tradeoff.
+- Moving on to elapsed time, we see that the baseline took 536ms, while our improved version returns 0ms (19ms at 500000 iterations). This shows a very large improvement that came from implementing dictionaries to `FindLocationsById` and especially to `FindOutgoingConnections`, as reported earlier in the first table in this section of the report
+- Regarding memory allocatin measurements, we see a significant jump once again between baseline and optimised versions, with 240028 bytes (48,0 B/iteration) vs 28 bytes (0,0 B/iteration) respectively
+- In total, we see a very small and worthy trade off in preparation time, and in exchange we get a very large improvement in both the elapsed time and the memory allocations.
 
 ## 7. Development reflection
 
