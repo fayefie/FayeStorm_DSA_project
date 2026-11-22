@@ -132,7 +132,7 @@ Record reproducible before/after measurements for loading/preparation, repeated 
 
 ### Phase 6. Measuring improvements in runtime from fresh baseline code against current code.
 - A test is ran for a small, medium, and large sized worlds at 5000 iterations. Each test is ran five times and the median and mean are shown here.
-- I also ran the test and additional five times each for small, medium, and large sized worlds at 500000 iterations instead. Only for the current version of the code because the untouched baseline couldn't handle that many iterations on my machine.
+- I also ran the test an additional five times each for small, medium, and large sized worlds at 500000 iterations instead. Only for the current version of the code because the untouched baseline couldn't handle that many iterations on my machine.
     - This is only done to show actual changes between world sizes since the current code returns 0ms for small and medium, and 1ms for large
 - Since the checksum is the same for all tests, it's not recorded here
 
