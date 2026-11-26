@@ -165,6 +165,14 @@ After changing that line of code, re-running the test again showed all greens.
 
 Briefly describe relevant assistance, if any.
 
+Used to explain concepts to me if I couldn't understand them myself with googling answers or reading through labs and lecture slides.
+This was done since I was very far behind and needed help catching up before the deadline (which I ended up missing)
+Also used to debug my code if I go particularly stuck somewhere and could not figure it out
+
+Mostly relied on what I understood from the labs and lectures, as well as using the solved reference labs supplied when I needed to
+
 ## 9. VG extension
 
 Only if attempting VG: heuristic, traversal constraints, correctness, and Dijkstra/A* comparison.
+
+VG not attempted
