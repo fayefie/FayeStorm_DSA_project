@@ -40,11 +40,11 @@ Baseline results on home PC:
 
 Describe important changes/retained choices, operations affected, and time/memory trade-offs.
 
-- WorldData now builds a dictionary once in its constructor, keyed by Location.Id. the _locations array and Location list are unchanged. The dictionary is exposed as IReadOnlyDictionary<int, Location>, WorldQueries.FindLocationById reads the index with TryGetValue. Instead of scanning the list, so lookups no longer re-scan locations
-  - FindLocationById drops from O(L) per call to O(1) average, and the index is build once per world.
+- WorldData.cs now builds a dictionary once in its constructor, keyed by `Location.Id`. the `_locations` array and Location list are unchanged. The dictionary is exposed as `IReadOnlyDictionary<int, Location>`, `WorldQueries.FindLocationById` reads the index with `TryGetValue`. Instead of scanning the list, so lookups no longer re-scan locations
+  - `FindLocationById` drops from O(L) per call to O(1) average, and the index is build once per world.
 
-- Outgoing connections are now also indexed once in WorldData as Dictionary<int, Connection[]>.
-    - FindOutGoingConnections is now an O(1) hash lookup that returns a shared immutable list.
+- Outgoing connections are now also indexed once in `WorldData.cs` as `Dictionary<int, Connection[]>`.
+    - `FindOutGoingConnections` is now an O(1) hash lookup that returns a shared immutable list.
 
 ## 3. Algorithms and adaptation
 
@@ -53,14 +53,14 @@ Explain your route finder at a useful high level and how the travel-budget query
 `DijkstraRouteFinder.FindRoute(start, goal)` that runs over the outgoing connections index from phase 2 and finds a lowest cost travel route between a start and goal point.
 
 ### Bookkeeping
-- `dist` - Dictionary<int, int> mapping node id. Current best known distance
-- `prev` - Dictionary<int, int> mapping node id. Predecessor to the best known route
-- `settled` - HashSet<int> tracking nodes whose distance is already final
-- Frontier - `MinPriorityQueuez(int NodeId, int Cost)>, priority = cost
+- `dist` - `Dictionary<int, int>` mapping node id. Current best known distance
+- `prev` - `Dictionary<int, int>` mapping node id. Predecessor to the best known route
+- `settled` - `HashSet<int>` tracking nodes whose distance is already final
+- Frontier - `MinPriorityQueue(int NodeId, int Cost)>`, priority = cost
 
 ### loop invariants and shortcuts
 - Each heap entry stores the node id and cost at the time of push. On dequeue, if the `costAtPush != dist[cureent]` then the entry has been superseded by a cheaper push and is discared (aka laze deletion)
-- That, combined with `settled`, each vertex is expanded at moost once
+- That, combined with `settled`, each vertex is expanded at most once
 - As soon as the goal is dequeued it is final (Dijkstra's invarint), so the rest of the reachable set is left unexpanded
 - Unknown endpoints (those not in `WorldData.LocationsById`) "short circuit" to a not-found result wotj amd empty route and `-1` cost before any heap work
 - `start == goal` returns `{start}` with cost 0 without a heap cycle
@@ -92,26 +92,26 @@ Two edge cases are handled without touching the main loop:
 
 Important tests/edge cases and what they demonstrate.
 
-1. LocationsById_ContainsEverySampleLocation()
+1. `LocationsById_ContainsEverySampleLocation()`
    - Tests the WorldData index that our lookups read from. If there's a broken index (count, dropped ID, etc), it'll fail here first
-2. FindLocationById_ReturnsNullWhenWorldIsEmpty()
+2. `FindLocationById_ReturnsNullWhenWorldIsEmpty()`
    - Makes sure that the lookup doesn't throw/return and invalid value if the dictionary has no locations
-3. FindLocationById_HandlesDuplicateLocationEntries()
+3. `FindLocationById_HandlesDuplicateLocationEntries()`
    - Handles having locations ID locations. Since we're using TryAdd then the first location with the sought ID wins
-4. FindOutgoingConnections_ReturnsEmptyWhenWorldHasNoConnections()
+4. `FindOutgoingConnections_ReturnsEmptyWhenWorldHasNoConnections()`
    - Returns and empty collection when there are no connections in the world
-5. Stress_EnqueueThenDrain_ReturnsItemsInNonDecreasingPriorityOrder()
+5. `Stress_EnqueueThenDrain_ReturnsItemsInNonDecreasingPriorityOrder()`
    - Test checks wheather MinPriorityQueue<int> can correctly maintain min-priority order when it's handling a large number of items
-6. SiftDown_AfterDequeue_SwapWithSmallerRightChild_NotJustLeft()
+6. `SiftDown_AfterDequeue_SwapWithSmallerRightChild_NotJustLeft()`
    - Checking if `SiftDown()` correctly chooses the smaller of the left and right children when restoring the min-heap after a dequeue.
    - This is to prevent a bug where the implementation always swaps with the left child, even if the right child has a smaller priority
-7. Dijkstra_UnknownStartOrGoal_ReturnsNotFound()
+7. `Dijkstra_UnknownStartOrGoal_ReturnsNotFound()`
    - Test does a missing bounds check, or `ContainsKey` returning wrong value
-8. Reachability_NegativeBudget_ReturnsEmpty()
+8. `Reachability_NegativeBudget_ReturnsEmpty()`
    - Tests that a negative budget shouldn't allow any location to be reached, this includes the starting location itself.
-9. Reachability_UnknownStart_ReturnsEmpty()
+9. `Reachability_UnknownStart_ReturnsEmpty()`
    - Tests that if the starting location doesn't exist in the dataset then the algorith shouldn return no reachable locations.
-10. Reachability_CostsSatisfyTriangleInequality()
+10. `Reachability_CostsSatisfyTriangleInequality()`
    - Tests reachability completeness and the correctness of recorded travel costs, using the triangle inequality.
 
 
@@ -127,11 +127,11 @@ Record reproducible before/after measurements for loading/preparation, repeated 
 | After (FindLocationById dictionary) | 463 | 6267100 |
 | After (GetOutGoingConnections dictionary) | 0 | 6267100 |
 
-- Running the baseline before/after the dictionary implementation for FindLocationById produced a ~13.4% improvement in run speed, showing that the implementation is a new improvement
-- After implementing the dictionary for FindOutGoingConnections, the elapsed time when running --baseline is now down to 0ms. Since the workload is mostly dominated by FindOutgoingConnections, and we have 9800-scans per call that have now become hash hits, it makes sense that we've had such a huge improvement now.
+- Running the baseline before/after the dictionary implementation for `FindLocationById` produced a ~13.4% improvement in run speed, showing that the implementation is a new improvement
+- After implementing the dictionary for `FindOutGoingConnections`, the elapsed time when running --baseline is now down to 0ms. Since the workload is mostly dominated by `FindOutgoingConnections`, and we have 9800-scans per call that have now become hash hits, it makes sense that we've had such a huge improvement now.
 
 ### Phase 6. Measuring improvements in runtime from fresh baseline code against current code.
-- Added extra code to Program.cs to help measure world preparations and memory allocation.
+- Added extra code to `Program.cs` to help measure world preparations and memory allocation.
 - The updated code is run in the current more optimised version of the code, and also added to a fresh baseline version and ran there as well
 - Preparation is measured by running a stopwatch around the world creation code.
 - Elapsed time was already measured by the baseline
@@ -156,7 +156,7 @@ The results are as follows:
 
 Describe one bug, wrong assumption, failed approach, or surprising result and how you investigated it.
 
-There was an incorrect implementation in my MinPriorityQueue, specifically in the SiftDown(int index) method. The method had the line `int right = 1 * index + 2;` which was calculating the wrong right child element for pretty much everry node.
+There was an incorrect implementation in my `MinPriorityQueue`, specifically in the `SiftDown(int index)` method. The method had the line `int right = 1 * index + 2;` which was calculating the wrong right child element for pretty much every node.
 The bug went unnoticed when I initially wrote the code, since the supplied starter test passed without issue, but it was caught only after a second test was added to test if the prio queue can correctly maintain min-priority order when it's handling a large number of items´.
 The error message said "Dequeue #3 did not return the next-lowest-priority item." and where it expected 453 it returned 819, which showed a sifting error. Checking the lab 04b, I found that the correct calculation should actually be `int right = 2 * index + 2;` to calculate the right child correctly.
 After changing that line of code, re-running the test again showed all greens.
@@ -167,7 +167,7 @@ Briefly describe relevant assistance, if any.
 
 Used to explain concepts to me if I couldn't understand them myself with googling answers or reading through labs and lecture slides.
 This was done since I was very far behind and needed help catching up before the deadline (which I ended up missing)
-Also used to debug my code if I go particularly stuck somewhere and could not figure it out
+Also used to debug my code/fix any broken implementations if I got particularly stuck somewhere and could not figure it out no matter how much I tried
 
 Mostly relied on what I understood from the labs and lectures, as well as using the solved reference labs supplied when I needed to
 
